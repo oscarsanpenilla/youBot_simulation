@@ -35,3 +35,7 @@ class TestForwardKin(TestCase):
         new_config = self.arm.get_new_arm_config([1,2,3,4,5], 1)
         self.assertListEqual(new_config, [1,2,2,2,2])
 
+        self.arm.joint_max_speed = 2
+        new_config = self.arm.get_new_arm_config([-1,-2,-3,-4,-5], 1)
+        self.assertListEqual(new_config, [-1,-2,-2,-2,-2])
+

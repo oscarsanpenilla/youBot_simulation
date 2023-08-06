@@ -16,11 +16,11 @@ class ForwardKin:
 
     @joint_max_speed.setter
     def joint_max_speed(self, value):
-        self._joint_max_speed = value
+        self._joint_max_speed = abs(value)
 
     def get_new_arm_config(self, joint_speeds: List[float], timestep: float) -> List[float]:
         # Enforce joint speed limits
-        j_speeds = np.array([min(speed, self._joint_max_speed) for speed in joint_speeds])
+        j_speeds = np.array([np.sign(speed) * min(abs(speed), self._joint_max_speed) for speed in joint_speeds])
 
         new_angles = self._curr_arm_th + j_speeds * timestep
         return new_angles.tolist()
