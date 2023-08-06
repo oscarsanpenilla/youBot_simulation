@@ -10,12 +10,19 @@ class FourWheeledMecanumOdometry:
         self.l = l
         self.q_init = q_init.copy()
         self.q_curr = self.q_init.copy()
+        self.th_wheel_curr = np.zeros(4)
+        self._d_th = None
 
-    def update_base_config(self, u: List[float]) -> List[float]:
-        self.q_curr = self.calc_new_base_config(u)
+    def reset(self):
+        self.q_curr = self.q_init
+        self.th_wheel_curr = np.zeros(4)
+
+    def update_base_config(self, u: List[float], timestep: float) -> List[float]:
+        self.q_curr = self.calc_new_base_config(u, timestep)
+        self.th_wheel_curr = self._d_th
         return self.q_curr.copy()
 
-    def calc_new_base_config(self, u: List[float]) -> List[float]:
+    def calc_new_base_config(self, u: List[float], timestep: float) -> List[float]:
         if len(u) != 4:
             raise RuntimeError("d_theta must be of size 4")
 
@@ -30,8 +37,10 @@ class FourWheeledMecanumOdometry:
             [   -1   ,   1    ,   -1   ,   1     ]
         ])
 
-        control_input = np.array(u).T
-        Vb = np.matmul(F, control_input)
+        control_input = np.array(u)
+        self._d_th = self.th_wheel_curr + control_input*timestep
+
+        Vb = np.matmul(F, self._d_th)
 
         wbz = Vb[0]
         vbx = Vb[1]
