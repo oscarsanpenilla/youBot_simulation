@@ -12,6 +12,15 @@ class FourWheeledMecanumOdometry:
         self.q_curr = self.q_init.copy()
         self.th_wheel_curr = np.zeros(4)
         self._d_th = None
+        self._joint_max_speed = 9e9
+
+    @property
+    def joint_max_speed(self):
+        return self._joint_max_speed
+
+    @joint_max_speed.setter
+    def joint_max_speed(self, value):
+        self._joint_max_speed = value
 
     def reset(self):
         self.q_curr = self.q_init
@@ -26,6 +35,9 @@ class FourWheeledMecanumOdometry:
         if len(u) != 4:
             raise RuntimeError("d_theta must be of size 4")
 
+        # Enforce joint speed limits
+        control_input = np.array([np.sign(speed) * min(abs(speed), self._joint_max_speed) for speed in u])
+
         l = self.l
         r = self.r
         w = self.w
@@ -37,7 +49,6 @@ class FourWheeledMecanumOdometry:
             [   -1   ,   1    ,   -1   ,   1     ]
         ])
 
-        control_input = np.array(u)
         self._d_th = self.th_wheel_curr + control_input*timestep
 
         Vb = np.matmul(F, self._d_th)
@@ -64,7 +75,7 @@ class FourWheeledMecanumOdometry:
         d_q = np.matmul(chassis_rot, d_qb).flatten()
 
         next_q = self.q_curr + d_q
-        return  next_q
+        return  next_q.tolist()
 
 
 
