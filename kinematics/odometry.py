@@ -4,15 +4,20 @@ import sympy as sp
 from typing import List, Dict
 
 class FourWheeledMecanumOdometry:
-    def __init__(self, r, w, l, q_init: List[float]):
+    def __init__(self, r, w, l, chasis_config: List[float], wheel_angles: List[float] = None):
         self.r = r
         self.w = w
         self.l = l
-        self.q_init = q_init.copy()
+        self.q_init = chasis_config.copy()
         self.q_curr = self.q_init.copy()
-        self.th_wheel_curr = np.zeros(4)
+        self._th_wheel_curr = [0] * 4 if not wheel_angles else wheel_angles
         self._d_th = None
         self._joint_max_speed = 9e9
+        self._total_time = 0.0
+
+    @property
+    def th_wheel_curr(self):
+        return list(self._th_wheel_curr)
 
     @property
     def joint_max_speed(self):
@@ -24,11 +29,12 @@ class FourWheeledMecanumOdometry:
 
     def reset(self):
         self.q_curr = self.q_init
-        self.th_wheel_curr = np.zeros(4)
+        self._th_wheel_curr = np.zeros(4)
+        self._total_time = 0.0
 
     def update_base_config(self, u: List[float], timestep: float) -> List[float]:
         self.q_curr = self.calc_new_base_config(u, timestep)
-        self.th_wheel_curr = self._d_th
+        self._th_wheel_curr += self._d_th
         return self.q_curr.copy()
 
     def calc_new_base_config(self, u: List[float], timestep: float) -> List[float]:
@@ -49,7 +55,7 @@ class FourWheeledMecanumOdometry:
             [   -1   ,   1    ,   -1   ,   1     ]
         ])
 
-        self._d_th = self.th_wheel_curr + control_input*timestep
+        self._d_th = control_input * timestep
 
         Vb = np.matmul(F, self._d_th)
 
@@ -59,7 +65,8 @@ class FourWheeledMecanumOdometry:
 
         d_qb = None
         if wbz == 0:
-            d_qb = Vb
+            d_qb = np.array([0, vbx, vby])
+
         else:
             d_qb = np.array([
                 [wbz],
@@ -75,6 +82,7 @@ class FourWheeledMecanumOdometry:
         d_q = np.matmul(chassis_rot, d_qb).flatten()
 
         next_q = self.q_curr + d_q
+        self._total_time += timestep
         return  next_q.tolist()
 
 
