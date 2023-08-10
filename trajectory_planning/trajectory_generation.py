@@ -17,12 +17,13 @@ class Trajectory:
         if self._Xend is None:
             raise RuntimeError("Xend is unset, use set_start_trans method")
 
+        T = traj_duration
         screw_path = []
         mat_log = mr.MatrixLog6(np.matmul(np.linalg.inv(self._Xstart), self._Xend))
-        s_list = np.arange(0, 1.01, self._num_trans_per_second)
+        t_list = np.arange(0, traj_duration + 0.01, self._num_trans_per_second)
+        s_list =  [3/(T**2)*(t**2) - 2/(T**3)*(t**3) for t in t_list]
         for s in s_list:
             exp_mat = expm(s * mat_log)
-            # exp_mat = mr.(s * mat_log)
             X_s = np.matmul(self._Xstart, exp_mat)
             rot_mat = X_s[:3, :3]
             trans_mat = X_s[:3, 3]
