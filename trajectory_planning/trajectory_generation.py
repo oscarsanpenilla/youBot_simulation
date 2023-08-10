@@ -11,7 +11,7 @@ class Trajectory:
         self._Xend: np.array = None
         self._X: np.array = None
 
-    def generate(self, traj_duration: float):
+    def generate(self, traj_duration: float, gripper_state: int = 0):
         if self._Xstart is None:
             raise RuntimeError("Xstart is unset, use set_start_trans method")
         if self._Xend is None:
@@ -27,10 +27,21 @@ class Trajectory:
             X_s = np.matmul(self._Xstart, exp_mat)
             rot_mat = X_s[:3, :3]
             trans_mat = X_s[:3, 3]
-            screw_path.append(rot_mat.flatten().tolist() + trans_mat.flatten().tolist())
+            screw_path.append(rot_mat.flatten().tolist() + trans_mat.flatten().tolist() + [gripper_state])
 
         return np.array(screw_path).tolist()
 
+    def generate_trajectories(self, start, goals, times, gripper_states):
+        trajectories = []
+        self.set_start_trans(start)
+        for goal, time, gripper_state in zip(goals, times, gripper_states):
+            self.set_end_trans(goal)
+            traj = self.generate(time, gripper_state)
+            for row in traj:
+                trajectories.append(row)
+            self.set_start_trans(goal)
+
+        return trajectories
 
 
     def set_start_trans(self, trans):
