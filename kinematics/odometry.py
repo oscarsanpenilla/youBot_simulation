@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import sin, cos
-import sympy as sp
+import modern_robotics as mr
 from typing import List, Dict
 
 class FourWheeledMecanumOdometry:
@@ -31,6 +31,16 @@ class FourWheeledMecanumOdometry:
         self.q_curr = self.q_init
         self._th_wheel_curr = np.zeros(4)
         self._total_time = 0.0
+
+    def get_curr_base_trans(self):
+        phi = self.q_curr[0]
+        skew = mr.VecToso3(np.array([0,0,1])*phi)
+        rot = mr.MatrixExp3(skew)
+        trans = np.array([self.q_curr[1], self.q_curr[2], 0.0963])
+        T = np.eye(4)
+        T[:3,:3] = rot
+        T[:3, 3] = trans
+        return T
 
     def update_base_config(self, u: List[float], timestep: float) -> List[float]:
         self.q_curr = self.calc_new_base_config(u, timestep)
