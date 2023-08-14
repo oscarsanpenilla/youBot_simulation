@@ -53,5 +53,14 @@ class ForwardKin:
         bodyJ = mr.JacobianBody(self.B_list, np.array(theta_list))
         return bodyJ
 
+    def get_curr_body_jacobian(self):
+        return self.body_jacobian(self._curr_arm_th)
+
+    def get_curr_config(self):
+        return self._curr_arm_th.copy()
+
+    def get_curr_endeffector_transform(self):
+        return self.forward_kinematics(self._curr_arm_th)
+
 
 

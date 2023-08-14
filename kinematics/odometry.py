@@ -15,6 +15,12 @@ class FourWheeledMecanumOdometry:
         self._joint_max_speed = 9e9
         self._total_time = 0.0
 
+        self.F = r/4* np.array([
+            [-1/(l+w), 1/(l+w), 1/(l+w), -1/(l+w)],
+            [    1   ,   1    ,    1   ,   1     ],
+            [   -1   ,   1    ,   -1   ,   1     ]
+        ])
+
     @property
     def th_wheel_curr(self):
         return list(self._th_wheel_curr)
@@ -48,35 +54,28 @@ class FourWheeledMecanumOdometry:
         return self.q_curr.copy()
 
     def calc_new_base_config(self, u: List[float], timestep: float) -> List[float]:
+        def is_almost_zero(x, epsilon=0.001):
+            return abs(x) < epsilon
+
         if len(u) != 4:
             raise RuntimeError("d_theta must be of size 4")
 
         # Enforce joint speed limits
         control_input = np.array([np.sign(speed) * min(abs(speed), self._joint_max_speed) for speed in u])
 
-        l = self.l
-        r = self.r
-        w = self.w
         phi, x, y = self.q_curr[0], self.q_curr[1], self.q_curr[2]
-
-        F = r/4* np.array([
-            [-1/(l+w), 1/(l+w), 1/(l+w), -1/(l+w)],
-            [    1   ,   1    ,    1   ,   1     ],
-            [   -1   ,   1    ,   -1   ,   1     ]
-        ])
 
         self._d_th = control_input * timestep
 
-        Vb = np.matmul(F, self._d_th)
+        Vb = np.matmul(self.F, self._d_th)
 
         wbz = Vb[0]
         vbx = Vb[1]
         vby = Vb[2]
 
         d_qb = None
-        if wbz == 0:
+        if is_almost_zero(wbz):
             d_qb = np.array([0, vbx, vby])
-
         else:
             d_qb = np.array([
                 [wbz],
