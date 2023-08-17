@@ -49,6 +49,20 @@ class ForwardKin:
         Te0 = mr.FKinBody(self.M0e, self.B_list, np.array(theta_list))
         return Te0
 
+    def inverse_kinematics(self, transform, seed=None):
+        if seed is None:
+            seed = self._curr_arm_th.copy()
+
+        return mr.IKinBody(self.B_list, self.M0e, transform, seed, 0.01, 0.001)
+
+    def set_from_IK(self, transform, seed=None):
+        arm_q, sol_found = self.inverse_kinematics(transform, seed)
+        if sol_found:
+            self._curr_arm_th = list(arm_q)
+        else:
+            raise RuntimeError("unable to set from Inverse Kinematics")
+
+
     def body_jacobian(self, theta_list: List[float]):
         bodyJ = mr.JacobianBody(self.B_list, np.array(theta_list))
         return bodyJ
