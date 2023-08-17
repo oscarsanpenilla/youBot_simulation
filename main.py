@@ -53,12 +53,12 @@ def gen_pickup_dropoff_block_trajectory():
     T7 = np.array(T6)  # release
     T8 = np.array(T5)  # move drop-off post
 
-    goals = [T1, T2]
-    times = [10,5]
-    gripper_states = [0,0]
-    # goals = [T1, T2, T3, T4, T5, T6, T7, T8]
-    # times = [10, 5, 3, 5, 20, 5, 3, 8]
-    # gripper_states = [0, 0, 1, 1, 1, 1, 0, 0]
+    # goals = [T1, T2]
+    # times = [10,5]
+    # gripper_states = [0,0]
+    goals = [T1, T2, T3, T4, T5, T6, T7, T8]
+    times = [10, 5, 3, 5, 20, 5, 3, 8]
+    gripper_states = [0, 0, 1, 1, 1, 1, 0, 0]
 
     return goals, times, gripper_states
 
@@ -79,12 +79,12 @@ def array_to_transformation_matrix(arr):
     return transformation_matrix
 
 def main():
-    q_base_init = [0, 0, 0]
+    print("Program started...")
+    q_base_init = [np.radians(10), -.2, -.2]
     q_arm_init = [1.16, 0, 0.2, -1.6, 0.1]
     wheel_angles = [0] * 4
     robot_kin = Kinematics(q_base_init, q_arm_init, wheel_angles)
     controller = Control(robot_kin)
-    print(robot_kin.arm_kin.get_curr_endeffector_transform())
 
     start = np.array([
         [ 0, 0, 1, 0.],
@@ -92,15 +92,23 @@ def main():
         [-1, 0, 0, 0.5],
         [ 0, 0, 0, 1.0]
     ])
+
+    print("\tCalculating Trajectories...")
     goals, times, gripper_states = gen_pickup_dropoff_block_trajectory()
     traj_gen = Trajectory()
     trajectory = traj_gen.generate_trajectories(start, goals, times, gripper_states)
 
+
+    print("\tProcessing simulation...")
     robot_state_list = []
     error_list = []
     dt = 0.01
-    kp = 1.4
-    ki = 0.01
+    # Best
+    kp, ki = 0.71, 0.001
+    # Overshoot
+    # kp, ki = 1.4, 0.01
+    # kp = 10.5
+    # ki = 5
     traj_size = len(trajectory)
     wheel_speeds = [0] * 4
     joint_speeds = [0] * 5
@@ -124,9 +132,17 @@ def main():
         robot_state_list.append(robot_state)
         error_list.append(error)
 
+    print("\tWriting csv file simulation...")
+    T1_size = int(times[0]//0.01)
     np.savetxt('CoppeliaSim.csv', np.array(robot_state_list), delimiter=',', fmt='%.4f')
-    np.savetxt('error.csv', np.array(error_list), delimiter=',', fmt='%.4f')
-    plot_columns_from_csv('error.csv')
+
+    print("\tWriting csv file error...")
+    np.savetxt('error.csv', np.array(error_list[:T1_size]), delimiter=',', fmt='%.4f')
+
+    print("\tGenerating Plots...")
+    plot_columns_from_csv('error.csv', 'output_plots.png')
+
+    print("End")
 
 
 
