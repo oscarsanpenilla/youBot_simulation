@@ -24,8 +24,10 @@ def main():
     error_list = []
     dt = 0.01
     # Best
-    kp, ki = 0.71, 0.001
+    kp, ki = 0.5, 0.01
     # Overshoot
+    # kp, ki = 2.73, 0.01
+
     # kp, ki = 1.4, 0.01
     # kp = 10.5
     # ki = 5

@@ -1,3 +1,3 @@
 controller type: feedforward + PI
-kp = 0.73
-ki = 0.1
+kp = 0.71
+ki = 0.001
