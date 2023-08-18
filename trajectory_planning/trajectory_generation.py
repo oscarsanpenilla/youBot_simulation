@@ -10,8 +10,10 @@ class Trajectory:
         self._Xstart: np.array = None
         self._Xend: np.array = None
         self._X: np.array = None
+        self.trajectories = []
+        self.traj_sizes = []
 
-    def generate(self, traj_duration: float, gripper_state: int = 0):
+    def generate(self, traj_duration: float, gripper_state: int = 0) -> np.array:
         if self._Xstart is None:
             raise RuntimeError("Xstart is unset, use set_start_trans method")
         if self._Xend is None:
@@ -32,20 +34,28 @@ class Trajectory:
         return np.array(screw_path).tolist()
 
     def generate_trajectories(self, start, goals, times, gripper_states):
-        trajectories = []
+        self.trajectories = []
+        self.traj_sizes = []
         self.set_start_trans(start)
         for goal, time, gripper_state in zip(goals, times, gripper_states):
             self.set_end_trans(goal)
             traj = self.generate(time, gripper_state)
+            self.traj_sizes.append(len(traj))
             for row in traj:
-                trajectories.append(row)
+                self.trajectories.append(row)
             self.set_start_trans(goal)
 
-        return trajectories
+        return self.trajectories
 
 
     def set_start_trans(self, trans):
-        self._Xstart = np.array(trans)
+        self._Xstart = np.array(trans).copy()
 
     def set_end_trans(self, trans):
-        self._Xend = np.array(trans)
+        self._Xend = np.array(trans).copy()
+
+    def get_trajectories(self):
+        return self.trajectories.copy()
+
+    def get_trajectory_sizes(self):
+        return self.traj_sizes.copy()
