@@ -15,6 +15,7 @@ class FourWheeledMecanumOdometry:
         self._joint_max_speed = 9e9
         self._total_time = 0.0
 
+        # F - transformation matrix for calculating the base velocities
         self.F = r/4* np.array([
             [-1/(l+w), 1/(l+w), 1/(l+w), -1/(l+w)],
             [    1   ,   1    ,    1   ,   1     ],
@@ -23,22 +24,27 @@ class FourWheeledMecanumOdometry:
 
     @property
     def th_wheel_curr(self):
+        # Property for accessing the current wheel angles
         return list(self._th_wheel_curr)
 
     @property
     def joint_max_speed(self):
+        # Property for accessing the maximum joint speed
         return self._joint_max_speed
 
     @joint_max_speed.setter
     def joint_max_speed(self, value):
+        # Setter for updating the maximum joint speed
         self._joint_max_speed = value
 
     def reset(self):
+        # Resets the class to its initial configuration
         self.q_curr = self.q_init
         self._th_wheel_curr = np.zeros(4)
         self._total_time = 0.0
 
     def get_curr_base_trans(self):
+        # Returns the current base transformation matrix
         phi = self.q_curr[0]
         skew = mr.VecToso3(np.array([0,0,1])*phi)
         rot = mr.MatrixExp3(skew)
@@ -49,12 +55,21 @@ class FourWheeledMecanumOdometry:
         return T
 
     def update_base_config(self, u: List[float], timestep: float) -> List[float]:
+        # Updates the base configuration based on the control input and timestep
+        # u - control input (change in wheel angles)
+        # timestep - time step
+
         self.q_curr = self.calc_new_base_config(u, timestep)
         self._th_wheel_curr += self._d_th
         return self.q_curr.copy()
 
     def calc_new_base_config(self, u: List[float], timestep: float) -> List[float]:
+        # Calculates the new base configuration based on the control input and timestep
+        # u - control input (change in wheel angles)
+        # timestep - time step
+
         def is_almost_zero(x, epsilon=0.001):
+            # Helper function to check if a value is almost zero
             return abs(x) < epsilon
 
         if len(u) != 4:
@@ -93,6 +108,7 @@ class FourWheeledMecanumOdometry:
         next_q = self.q_curr + d_q
         self._total_time += timestep
         return  next_q.tolist()
+
 
 
 
