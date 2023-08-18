@@ -1,5 +1,5 @@
 from unittest import TestCase
-from kinematics.kinematics import Kinematics
+from kinematics.mobile_manipulator_kin import MobileManipulatorKin
 import numpy as np
 
 
@@ -10,7 +10,7 @@ class TestKinematics(TestCase):
         base_init_config = [0] * 3
         arm_init_config = [0] * 5
         wheel_angles = [0] * 4
-        self.robot_kin = Kinematics(base_init_config, arm_init_config, wheel_angles)
+        self.robot_kin = MobileManipulatorKin(base_init_config, arm_init_config, wheel_angles)
 
     def test_next_state_move_x(self):
         states = []

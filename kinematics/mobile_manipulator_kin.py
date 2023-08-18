@@ -6,7 +6,7 @@ import numpy as np
 import modern_robotics as mr
 
 
-class Kinematics:
+class MobileManipulatorKin:
     def __init__(self, base_init_config, arm_init_config, wheel_angles):
         self.l = 0.47 / 2
         self.w = 0.3 / 2

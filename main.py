@@ -1,5 +1,5 @@
 from control.control import Control
-from kinematics.kinematics import Kinematics
+from kinematics.mobile_manipulator_kin import MobileManipulatorKin
 from trajectory_planning.trajectory_generation import Trajectory
 import numpy as np
 from numpy import cos, sin, pi
@@ -11,7 +11,7 @@ def main():
     q_base_init = [np.radians(10), -.2, -.2]
     q_arm_init = [1.16, 0, 0.2, -1.6, 0.1]
     wheel_angles = [0] * 4
-    robot_kin = Kinematics(q_base_init, q_arm_init, wheel_angles)
+    robot_kin = MobileManipulatorKin(q_base_init, q_arm_init, wheel_angles)
     controller = Control(robot_kin)
 
     print("\tCalculating Trajectories...")

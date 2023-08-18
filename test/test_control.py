@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 from control.control import Control
-from kinematics.kinematics import Kinematics
+from kinematics.mobile_manipulator_kin import MobileManipulatorKin
 
 np.set_printoptions(precision=3, suppress=True, linewidth=500)
 
@@ -11,7 +11,7 @@ class TestControl(TestCase):
         q_base_init = [0, 0, 0]
         q_arm_init = [0, 0, 0.2, -1.6, 0]
         wheel_angles = [0] * 4
-        self.robot_kin = Kinematics(q_base_init, q_arm_init, wheel_angles)
+        self.robot_kin = MobileManipulatorKin(q_base_init, q_arm_init, wheel_angles)
         self.controller = Control(self.robot_kin)
 
     def almost_equal_lists(self, list1, list2, tol=1):

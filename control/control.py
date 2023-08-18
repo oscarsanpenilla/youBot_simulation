@@ -1,12 +1,12 @@
 import numpy as np
 import modern_robotics as mr
 from kinematics.forward_kin import ForwardKin
-from kinematics.kinematics import Kinematics
+from kinematics.mobile_manipulator_kin import MobileManipulatorKin
 from kinematics.odometry import FourWheeledMecanumOdometry
 
 
 class Control:
-    def __init__(self, robot_kin: Kinematics):
+    def __init__(self, robot_kin: MobileManipulatorKin):
 
         self._robot_kin = robot_kin
         self._sum_Xerr = np.zeros(6)
