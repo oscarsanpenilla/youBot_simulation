@@ -1,7 +1,7 @@
 from typing import List
 
-from kinematics.forward_kin import ForwardKin
-from kinematics.odometry import FourWheeledMecanumOdometry
+from kinematics.arm_kinematics import ArmKinematics
+from kinematics.odometry import MobileBaseOdometry
 import numpy as np
 import modern_robotics as mr
 
@@ -14,8 +14,8 @@ class MobileManipulatorKin:
         self.r = 0.0475     # Radius of the wheels
 
         # Initialize the base odometry and arm kinematics
-        self.base_odom = FourWheeledMecanumOdometry(self.r, self.w, self.l, base_init_config, wheel_angles)
-        self.arm_kin = ForwardKin(init_q=arm_init_config)
+        self.base_odom = MobileBaseOdometry(self.r, self.w, self.l, base_init_config, wheel_angles)
+        self.arm_kin = ArmKinematics(init_q=arm_init_config)
 
         # Transformation matrix from the robot's base to the mobile manipulator's base
         self.Tb0 = np.array([

@@ -3,7 +3,7 @@ from numpy import sin, cos
 import modern_robotics as mr
 from typing import List, Dict
 
-class FourWheeledMecanumOdometry:
+class MobileBaseOdometry:
     def __init__(self, r, w, l, chasis_config: List[float], wheel_angles: List[float] = None):
         self.r = r
         self.w = w

@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from kinematics.forward_kin import ForwardKin
+from kinematics.arm_kinematics import ArmKinematics
 
 
 class TestForwardKin(TestCase):
@@ -10,7 +10,7 @@ class TestForwardKin(TestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self.arm = ForwardKin([0, 0, 0, 0, 0])
+        self.arm = ArmKinematics([0, 0, 0, 0, 0])
 
     def test_get_new_arm_config(self):
         new_config = self.arm.get_new_arm_config([0] * 5, 0)

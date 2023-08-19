@@ -1,5 +1,5 @@
 from unittest import TestCase
-from kinematics.odometry import FourWheeledMecanumOdometry
+from kinematics.odometry import MobileBaseOdometry
 import numpy as np
 
 
@@ -11,7 +11,7 @@ class TestFourWheeledMecanumOdometry(TestCase):
         w = 0.3 / 2
         r = 0.0475
         q_init = [0, 0, 0]
-        self.robot = FourWheeledMecanumOdometry(r, w, l, q_init)
+        self.robot = MobileBaseOdometry(r, w, l, q_init)
 
     def test_get_new_base_config(self):
         next_q = self.robot.calc_new_base_config([0, 0, 0, 0], timestep=1)

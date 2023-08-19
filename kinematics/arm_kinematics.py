@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 import modern_robotics as mr
 
-class ForwardKin:
+class ArmKinematics:
     def __init__(self, init_q: List[float]):
         """
         Initializes the ForwardKin class with initial joint angles.

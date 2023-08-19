@@ -1,8 +1,8 @@
 import numpy as np
 import modern_robotics as mr
-from kinematics.forward_kin import ForwardKin
+from kinematics.arm_kinematics import ArmKinematics
 from kinematics.mobile_manipulator_kin import MobileManipulatorKin
-from kinematics.odometry import FourWheeledMecanumOdometry
+from kinematics.odometry import MobileBaseOdometry
 
 
 class Control:

@@ -1,12 +1,18 @@
 from control.control import Control
 from kinematics.mobile_manipulator_kin import MobileManipulatorKin
-from trajectory_planning.trajectory_generation import Trajectory
-import numpy as np
-from numpy import cos, sin, pi
-from plotter import plot_columns_from_csv
-import itertools
+from trajectory_planning.screw_axis_trajectory_generator import ScrewAxisTrajectoryGenerator
+from trajectory_planning.utils import gen_pickup_dropoff_block_trajectory, generate_new_task_trajectory, \
+    trajectory_to_csv
 
-def main():
+import numpy as np
+from plotter import plot_columns_from_csv
+from enum import Enum
+
+class Task(Enum):
+    PICKUP_DROP_OFF = 0
+    PLATFORM = 1
+
+def runscript(kp, ki, task: Task):
     print("Program started...")
     q_base_init = [np.radians(10), -.2, -.2]
     q_arm_init = [1.16, 0, 0.2, -1.6, 0.1]
@@ -15,50 +21,50 @@ def main():
     controller = Control(robot_kin)
 
     print("\tCalculating Trajectories...")
-    start, goals, times, gripper_states, traj_max_speeds = gen_pickup_dropoff_block_trajectory()
-    traj_gen = Trajectory()
-    trajectory = traj_gen.generate_trajectories(start, goals, times, gripper_states)
+    traj_gen = ScrewAxisTrajectoryGenerator()
+    start, goals, times, gripper_states, traj_max_speeds = None, None, None, None, None
+    if task == Task.PICKUP_DROP_OFF:
+        start, goals, times, gripper_states, traj_max_speeds = gen_pickup_dropoff_block_trajectory()
+    elif task == Task.PLATFORM:
+        start, goals, times, gripper_states, traj_max_speeds = generate_new_task_trajectory()
+    trajectories = traj_gen.generate_trajectories(start, goals, times, gripper_states)
+
+    print("\tWriting Trajectories csv file...")
+    trajectory_to_csv(trajectories, gripper_states, 'traj.csv')
 
     print("\tProcessing simulation...")
     robot_state_list = []
     error_list = []
     dt = 0.01
-    # Best
-    kp, ki = 0.5, 0.01
-    # Overshoot
-    # kp, ki = 2.73, 0.01
 
-    # kp, ki = 1.4, 0.01
-    # kp = 10.5
-    # ki = 5
-    traj_size = len(trajectory)
     wheel_speeds = [0] * 4
     joint_speeds = [0] * 5
-    traj_idx_upper = list(itertools.accumulate(traj_gen.get_trajectory_sizes()))
-    for idx, pose in enumerate(trajectory):
-        if idx + 1 >= traj_size:
-            break
-
+    for traj_num, traj in enumerate(trajectories):
         # Set joint speeds for base and arm
-        traj_num = get_curr_exec_traj_num(idx, traj_idx_upper)
         robot_kin.base_odom.joint_max_speed = traj_max_speeds[traj_num]["base"]
         robot_kin.arm_kin.joint_max_speed = traj_max_speeds[traj_num]["arm"]
 
-        q = robot_kin.next_state(wheel_speeds, joint_speeds, dt)
-        gripper_state = int(trajectory[idx][-1])
+        traj_size = len(traj)
+        for idx, _ in enumerate(traj):
 
-        Xd = array_to_transformation_matrix(trajectory[idx][:12])
-        Xd_next = array_to_transformation_matrix(trajectory[idx + 1][:12])
+            if idx + 1 >= traj_size:
+                break
 
-        ctrl_out = controller.feedback_control(dt, Xd, Xd_next, kp, ki)
-        wheel_speeds = ctrl_out[:4]
-        joint_speeds = ctrl_out[4:]
+            q = robot_kin.next_state(wheel_speeds, joint_speeds, dt)
+            gripper_state = gripper_states[traj_num]
 
-        robot_state = q + [gripper_state]
-        error = controller.get_curr_error()
+            Xd = traj[idx]
+            Xd_next = traj[idx + 1]
 
-        robot_state_list.append(robot_state)
-        error_list.append(error)
+            ctrl_out = controller.feedback_control(dt, Xd, Xd_next, kp, ki)
+            wheel_speeds = ctrl_out[:4]
+            joint_speeds = ctrl_out[4:]
+
+            robot_state = q + [gripper_state]
+            error = controller.get_curr_error()
+
+            robot_state_list.append(robot_state)
+            error_list.append(error)
 
     print("\tWriting csv file simulation...")
     T1_size = int(times[0]//0.01)
@@ -73,231 +79,19 @@ def main():
     print("End")
 
 
-def get_curr_exec_traj_num(idx, traj_idx_upper):
-    traj_num = None
-    if 0 <= idx < traj_idx_upper[0]:
-        traj_num = 0
-    elif traj_idx_upper[0] <= idx < traj_idx_upper[1]:
-        traj_num = 1
-    elif traj_idx_upper[1] <= idx < traj_idx_upper[2]:
-        traj_num = 2
-    elif traj_idx_upper[2] <= idx < traj_idx_upper[3]:
-        traj_num = 3
-    elif traj_idx_upper[3] <= idx < traj_idx_upper[4]:
-        traj_num = 4
-    elif traj_idx_upper[4] <= idx < traj_idx_upper[5]:
-        traj_num = 5
-    elif traj_idx_upper[5] <= idx < traj_idx_upper[6]:
-        traj_num = 6
-    elif traj_idx_upper[6] <= idx < traj_idx_upper[7]:
-        traj_num = 7
-    return traj_num
+def main():
 
-def rotation_about_Y_axis(angle: float):
-    th = np.radians(angle)
-    return np.array([
-        [cos(th), 0, -sin(th), 0],
-        [0, 1, 0, 0],
-        [sin(th), 0, cos(th), 0],
-        [0, 0, 0, 1]
-    ])
+    # Running Pickup drop-off block task with best control constants
+    kp, ki = 0.5, 0.01
+    runscript(kp, ki, Task.PICKUP_DROP_OFF)
 
-def gen_pickup_dropoff_block_trajectory():
-    rot_y = rotation_about_Y_axis(-20)
-    start = np.array([
-        [ 0, 0, 1, 0.],
-        [ 0, 1, 0, 0.],
-        [-1, 0, 0, 0.5],
-        [ 0, 0, 0, 1.0]
-    ])
-
-    Tsc_init = np.array([
-        [1, 0, 0, 1.0],
-        [0, 1, 0, 0.0],
-        [0, 0, 1, 0.0],
-        [0, 0, 0, 1.0],
-    ])
-
-    Tsc_final = np.array([
-        [ 0, 1,  0,  0.0],
-        [-1, 0,  0, -1.0],
-        [ 0, 0,  1,  0.0],
-        [ 0, 0,  0,  1.0],
-    ])
-
-    Tce_standoff = np.array([
-        [ 0,  0, 1, 0.0],
-        [ 0,  1, 0, 0.0],
-        [-1,  0, 0, 0.1],
-        [ 0,  0, 0, 1.0],
-    ])
-    Tce_standoff = np.matmul(Tce_standoff, rot_y)
-
-    Tce_grasp = np.array([
-        [ 0,  0, 1, 0.0],
-        [ 0,  1, 0, 0.0],
-        [-1,  0, 0, 0.025],
-        [ 0,  0, 0, 1.0],
-    ])
-    Tce_grasp = np.matmul(Tce_grasp, rot_y)
-
-    T1 = np.matmul(Tsc_init, Tce_standoff)  # above block pre
-    T2 = np.matmul(Tsc_init, Tce_grasp)  # move grasp
-    T3 = np.array(T2)  # grasp
-    T4 = np.array(T1)  # above block post
-    T5 = np.matmul(Tsc_final, Tce_standoff)  # above block drop-off pre
-    T6 = np.matmul(Tsc_final, Tce_grasp)  # move drop-off
-    T7 = np.array(T6)  # release
-    T8 = np.array(T5)  # move drop-off post
-
-    # goals = [T1, T2]
-    # times = [10,5]
-    # gripper_states = [0,0]
-    goals = [T1, T2, T3, T4, T5, T6, T7, T8]
-    times = [10, 5, 3, 5, 20, 5, 3, 8]
-    gripper_states = [0, 0, 1, 1, 1, 1, 0, 0]
-    traj_max_speeds = {
-        0 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        1 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        2 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        3 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        4 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        5 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        6 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        7 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-    }
-
-    return start, goals, times, gripper_states, traj_max_speeds
-
-
-def generate_new_task_trajectory():
-    rot_y = rotation_about_Y_axis(-20)
-    start = np.array([
-        [0.1699, 0, 0.9854, 0.22],
-        [0, 1, 0, 0.0],
-        [-0.9854, 0, 0.1699, 0.4713],
-        [0, 0, 0, 1.0],
-    ])
-
-    Tsc_init = np.array([
-        [1, 0, 0, 1],
-        [0, 1, 0, -0.5],
-        [0, 0, 1, 0.0],
-        [0, 0, 0, 1.0],
-    ])
-
-    Tsc_final = np.array([
-        [-1, 0, 0, 0.2],
-        [0, -1, 0, -0.5],
-        [0, 0, 1, 0.175],
-        [0, 0, 0, 1.0],
-    ])
-
-    Tce_standoff = np.array([
-        [0, 0, 1, 0.0],
-        [0, 1, 0, 0.0],
-        [-1, 0, 0, 0.25],
-        [0, 0, 0, 1.0],
-    ])
-    Tce_standoff = np.matmul(Tce_standoff, rot_y)
-
-    Tce_grasp = np.array([
-        [0, 0, 1, 0.0],
-        [0, 1, 0, 0.0],
-        [-1, 0, 0, 0.025],
-        [0, 0, 0, 1.0],
-    ])
-    Tce_grasp = np.matmul(Tce_grasp, rot_y)
-
-    T1 = np.matmul(Tsc_init, Tce_standoff)  # above block pre
-    T2 = np.matmul(Tsc_init, Tce_grasp)  # move grasp
-    T3 = np.array(T2)  # grasp
-    T4 = np.array(T1)  # above block post
-    T5 = np.matmul(Tsc_final, Tce_standoff)  # above block drop-off pre
-    T6 = np.matmul(Tsc_final, Tce_grasp)  # move drop-off
-    T7 = np.array(T6)  # release
-    T8 = np.array(T5)  # move drop-off post
-
-    goals = [T1, T2, T3, T4, T5, T6, T7, T8]
-    times = [10, 5, 3, 5, 20, 5, 3, 8]
-    gripper_states = [0, 0, 1, 1, 1, 1, 0, 0]
-    traj_max_speeds = {
-        0 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        1 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        2 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        3 : {
-            "base" : 3 * 360 * np.pi/180,
-            "arm"  : 1.5 * 360 * np.pi/180,
-        },
-        4 : {
-            "base" : 0 * 360 * np.pi/180,
-            "arm"  : 0.1 * 360 * np.pi/180,
-        },
-        5 : {
-            "base" : 0 * 360 * np.pi/180,
-            "arm"  : 0.1 * 360 * np.pi/180,
-        },
-        6 : {
-            "base" : 0 * 360 * np.pi/180,
-            "arm"  : 0.1 * 360 * np.pi/180,
-        },
-        7 : {
-            "base" : 0 * 360 * np.pi/180,
-            "arm"  : 0.1 * 360 * np.pi/180,
-        },
-    }
-
-    return start, goals, times, gripper_states, traj_max_speeds
-
-
-def array_to_transformation_matrix(arr):
-    arr = np.array(arr)
-    if arr.size != 12:
-        raise ValueError('Input array must be of size 12')
-
-    rotation_matrix = arr[:9].reshape(3, 3)
-    translation_vector = arr[9:]
-
-    # Create a 4x4 homogeneous transformation matrix
-    transformation_matrix = np.eye(4)
-    transformation_matrix[:3, :3] = rotation_matrix
-    transformation_matrix[:3, 3] = translation_vector
-
-    return transformation_matrix
-
+    # # Running Pickup drop-off block task with overshoot control constants
+    # kp, ki = 2.73, 0.01
+    # runscript(kp, ki, Task.PICKUP_DROP_OFF)
+    #
+    # # Running Platform task
+    # kp, ki = 0.5, 0.01
+    # runscript(kp, ki, Task.PLATFORM)
 
 if __name__ == '__main__':
     main()

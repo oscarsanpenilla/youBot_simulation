@@ -1,5 +1,6 @@
 from unittest import TestCase
-from trajectory_planning.trajectory_generation import Trajectory
+from trajectory_planning.screw_axis_trajectory_generator import ScrewAxisTrajectoryGenerator
+from trajectory_planning.utils import trajectory_to_csv
 import numpy as np
 
 class TestTrajectory(TestCase):
@@ -7,8 +8,7 @@ class TestTrajectory(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-
-        self.traj_gen = Trajectory()
+        self.traj_gen = ScrewAxisTrajectoryGenerator()
 
     def test_generate(self):
         start = np.eye(4)
@@ -18,10 +18,9 @@ class TestTrajectory(TestCase):
             [0, 0, 1 ,1],
             [0, 0, 0 ,1],
         ])
-        self.traj_gen.set_start_trans(start)
-        self.traj_gen.set_end_trans(end)
-        traj = np.array(self.traj_gen.generate(1))
-        np.savetxt('traj.csv', traj, delimiter=',', fmt='%.6f')
+        self.traj_gen.set_start_pose(start)
+        self.traj_gen.set_end_pose(end)
+        traj = np.array(self.traj_gen.generate(10))
 
 
     def test_generate_x(self):
@@ -32,10 +31,10 @@ class TestTrajectory(TestCase):
             [0, 0, 1 ,0.1],
             [0, 0, 0 ,1],
         ])
-        self.traj_gen.set_start_trans(start)
-        self.traj_gen.set_end_trans(end)
+        self.traj_gen.set_start_pose(start)
+        self.traj_gen.set_end_pose(end)
         traj = np.array(self.traj_gen.generate(5))
-        np.savetxt('traj.csv', traj, delimiter=',', fmt='%.6f')
+        trajectory_to_csv(traj, [0])
 
     def test_generate_z(self):
         start = np.eye(4)
@@ -45,10 +44,10 @@ class TestTrajectory(TestCase):
             [0, 0, 1 ,1],
             [0, 0, 0 ,1],
         ])
-        self.traj_gen.set_start_trans(start)
-        self.traj_gen.set_end_trans(end)
+        self.traj_gen.set_start_pose(start)
+        self.traj_gen.set_end_pose(end)
         traj = np.array(self.traj_gen.generate(30))
-        np.savetxt('traj.csv', traj, delimiter=',', fmt='%.6f')
+        trajectory_to_csv(traj, [0])
 
     def test_generate_trajectories(self):
         start = np.eye(4)
@@ -82,7 +81,7 @@ class TestTrajectory(TestCase):
 
         times = [5, 1, 2, 5]
         traj = np.array(self.traj_gen.generate_trajectories(start, goals, times, gripper_states))
-        np.savetxt('traj.csv', traj, delimiter=',', fmt='%.6f')
+        trajectory_to_csv(traj, gripper_states)
 
     def test_generate_pickup_dropoff_trajectory(self):
         Tse_init = np.array([
@@ -134,7 +133,7 @@ class TestTrajectory(TestCase):
         gripper_states = [0 , 0,  1,  1,  1,  1,  0,  0]
 
         traj = np.array(self.traj_gen.generate_trajectories(Tse_init, goals, times, gripper_states))
-        np.savetxt('traj.csv', traj, delimiter=',', fmt='%.6f')
+        trajectory_to_csv(traj, gripper_states)
 
 
     def test_generate_pickup_dropoff_trajectory2(self):
@@ -187,6 +186,6 @@ class TestTrajectory(TestCase):
         gripper_states = [0 , 0,  1,  1,  1,  1,  0,  0]
 
         traj = np.array(self.traj_gen.generate_trajectories(Tse_init, goals, times, gripper_states))
-        np.savetxt('traj.csv', traj, delimiter=',', fmt='%.6f')
+        trajectory_to_csv(traj, gripper_states)
 
 
