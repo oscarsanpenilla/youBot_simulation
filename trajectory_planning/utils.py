@@ -46,7 +46,7 @@ def generate_new_task_trajectory(y_tilt_angle=20):
     Tsc_final = np.array([
         [-1, 0, 0, 0.2],
         [0, -1, 0, -0.5],
-        [0, 0, 1, 0.175],
+        [0, 0, 1, 0.185],
         [0, 0, 0, 1.0],
     ])
 
@@ -76,35 +76,37 @@ def generate_new_task_trajectory(y_tilt_angle=20):
     T8 = np.array(T5)  # move drop-off post
 
     goals = [T1, T2, T3, T4, T5, T6, T7, T8]
-    times = [10, 5, 3, 5, 20, 5, 3, 8]
+    times = [5, 2, 1, 2, 12, 4, 1, 4]
     gripper_states = [0, 0, 1, 1, 1, 1, 0, 0]
+    wheel_rev_sec = 3 * 360 * np.pi / 180
+    joint_rev_sec = 1.5 * 360 * np.pi / 180
     traj_max_speeds = {
         0: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         1: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         2: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         3: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         4: {
-            "base": 0 * 360 * np.pi / 180,
+            "base": 0.0,
             "arm": 0.1 * 360 * np.pi / 180,
         },
         5: {
-            "base": 0 * 360 * np.pi / 180,
+            "base": 0.0,
             "arm": 0.1 * 360 * np.pi / 180,
         },
         6: {
-            "base": 0 * 360 * np.pi / 180,
+            "base": 0.0,
             "arm": 0.1 * 360 * np.pi / 180,
         },
         7: {
@@ -175,40 +177,42 @@ def gen_pickup_dropoff_block_trajectory(y_tilt_angle=20):
     T8 = np.array(T5)  # move drop-off post
 
     goals = [T1, T2, T3, T4, T5, T6, T7, T8]
-    times = [10, 5, 3, 5, 20, 5, 3, 8]
+    times = [5, 2, 1, 2, 5, 2, 1, 2]
     gripper_states = [0, 0, 1, 1, 1, 1, 0, 0]
+    wheel_rev_sec = 1 * 360 * np.pi / 180
+    joint_rev_sec = 1.5 * 360 * np.pi / 180
     traj_max_speeds = {
         0: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         1: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         2: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         3: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         4: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         5: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         6: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
         7: {
-            "base": 3 * 360 * np.pi / 180,
-            "arm": 1.5 * 360 * np.pi / 180,
+            "base": wheel_rev_sec,
+            "arm": joint_rev_sec,
         },
     }
 

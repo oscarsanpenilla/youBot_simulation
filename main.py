@@ -14,7 +14,7 @@ class Task(Enum):
 
 def runscript(kp, ki, task: Task):
     print("Program started...")
-    q_base_init = [np.radians(10), -.2, -.2]
+    q_base_init = [0,0,0]
     q_arm_init = [1.16, 0, 0.2, -1.6, 0.1]
     wheel_angles = [0] * 4
     robot_kin = MobileManipulatorKin(q_base_init, q_arm_init, wheel_angles)
@@ -82,15 +82,15 @@ def runscript(kp, ki, task: Task):
 def main():
 
     # Running Pickup drop-off block task with best control constants
-    kp, ki = 0.5, 0.01
+    kp, ki = 2.9, 0.01
     runscript(kp, ki, Task.PICKUP_DROP_OFF)
 
     # # Running Pickup drop-off block task with overshoot control constants
-    # kp, ki = 2.73, 0.01
+    # kp, ki = 8.0, 0.1
     # runscript(kp, ki, Task.PICKUP_DROP_OFF)
     #
-    # # Running Platform task
-    # kp, ki = 0.5, 0.01
+    # Running Platform task
+    # kp, ki = 2.9, 0.01
     # runscript(kp, ki, Task.PLATFORM)
 
 if __name__ == '__main__':
