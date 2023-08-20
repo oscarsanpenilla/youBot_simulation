@@ -12,8 +12,8 @@ Noteworthy Observation:
 Upon the successful placement of the block on the robot's platform, it might be evident that the block doesn't remain stable on the platform. This instability is attributed to the simulation not taking into account the collision meshes between the block and the platform. Thus, the block's observed behavior isn't a reflection of a software glitch or an error in the manipulator's operation but is an inherent characteristic of the current simulation settings.
 
 controller type: feedforward + PI
-kp = 0.71
-ki = 0.001
+kp = 2.9
+ki = 0.01
 
 start = np.array([
     [0.1699, 0, 0.9854, 0.22],
