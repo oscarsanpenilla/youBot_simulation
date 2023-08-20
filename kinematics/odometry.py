@@ -94,8 +94,8 @@ class MobileBaseOdometry:
         else:
             d_qb = np.array([
                 [wbz],
-                [vbx*sin(wbz) + vby/wbz * (cos(wbz)-1)],
-                [vby*sin(wbz) + vbx/wbz * (1-cos(wbz))],
+                [(vbx*sin(wbz) + vby * (cos(wbz)-1))/wbz],
+                [(vby*sin(wbz) + vbx * (1-cos(wbz)))/wbz],
             ])
 
         chassis_rot = np.array([
